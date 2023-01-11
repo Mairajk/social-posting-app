@@ -18,9 +18,6 @@ import mongoose from "mongoose";
 
 const SECRET = process.env.SECRET || 'secuirity';
 
-const ADMIN = process.env.ADMIN || 'mairajkhan597@gmail.com';
-
-
 const app = express();
 
 const port = process.env.PORT || 5001;
@@ -44,7 +41,9 @@ const userSchema = new mongoose.Schema({
     lastName: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
-
+    age: { type: String },
+    profilePhoto: { type: String },
+    contact: { type: String }
 });
 
 
@@ -54,8 +53,9 @@ const userModel = mongoose.model('Users', userSchema);
 
 
 let postSchema = new mongoose.Schema({
+    // userName: { type: String, required: true },
     postText: { type: String },
-    postImage: { type: String },
+    // postImage: { type: String },
     date: { type: Date, default: Date.now }
 });
 
@@ -140,7 +140,6 @@ app.post('/api/v1/signup', (req, res) => {
                             }
                         });
                 });
-
             }
         } else {
             console.log("error ===> ", err);
@@ -158,7 +157,6 @@ app.post('/api/v1/signup', (req, res) => {
 
 
 //////////////////  LOGIN API ////////////////////////////////////
-
 
 app.post('/api/v1/login', (req, res) => {
     let body = req.body;
@@ -206,29 +204,16 @@ app.post('/api/v1/login', (req, res) => {
                                     httpOnly: true
                                 });
 
-                                (user.email === ADMIN) ?
-
-                                    res.send({
-                                        message: 'logedin successfully',
-                                        isAdmin: true,
-                                        userProfile: {
-                                            firstName: user.firstName,
-                                            lastName: user.lastName,
-                                            email: user.email,
-                                            _id: user._id
-                                        }
-                                    })
-                                    :
-                                    res.send({
-                                        message: 'logedin successfully',
-                                        isAdmin: false,
-                                        userProfile: {
-                                            firstName: user.firstName,
-                                            lastName: user.lastName,
-                                            email: user.email,
-                                            _id: user._id
-                                        }
-                                    });
+                                res.send({
+                                    message: 'logedin successfully',
+                                    isAdmin: true,
+                                    userProfile: {
+                                        firstName: user.firstName,
+                                        lastName: user.lastName,
+                                        email: user.email,
+                                        _id: user._id
+                                    }
+                                })
                                 return;
 
                             } else {
@@ -333,7 +318,7 @@ app.get('/api/v1/profile', (req, res) => {
     if (!req?.cookies?.Token) {
         res.status(401).send({
             message: "include http-only credentials with every request"
-        })
+        });
         return;
     }
 
@@ -351,25 +336,16 @@ app.get('/api/v1/profile', (req, res) => {
                     maxAge: 1,
                     httpOnly: true
                 });
-                res.send({ message: "token expired" })
+                res.send({ message: "token expired" });
 
             } else {
 
                 console.log("token approved");
 
-                // req.body.token = decodedData;
-
-                (decodedData.email === ADMIN) ?
-
-                    res.send({
-                        isAdmin: true,
-                        email: decodedData.email
-                    })
-                    :
-                    res.send({
-                        isAdmin: false,
-                        email: decodedData.email
-                    })
+                res.send({
+                    message: 'profile get successfully',
+                    userProfile: decodedData.email
+                });
             }
         } else {
             res.status(401).send("invalid token")
@@ -379,41 +355,36 @@ app.get('/api/v1/profile', (req, res) => {
 
 //////////////////// Product adding API //////////////////////////////////
 
-app.post('/api/v1/post', async (req, res) => {
+app.post('/api/v1/post', (req, res) => {
     const body = req.body;
-    try {
 
-        if (
-            !body.postText
-            &&
-            !body.postImage
-        ) {
-            res.status(400).send({
-                message: 'Atleast one prameter is required'
-            });
-            return;
-        }
-
-        console.log(body.name);
-        console.log(body.price);
-        console.log(body.description);
-
-        const post = await postModel.create({
-            postText: body.postText,
-            postImage: body.image,
-            date: new Date().toString(),
-        })
-        // if (!post) throw new Error('server error').status(500);
-        if (!post) throw new Error({ message: 'server error', statusCode: 500 });
-
-        res.send({
-            message: 'product added successfully',
-            data: saved
+    if (
+        !body.postText
+        &&
+        !body.postImage
+    ) {
+        res.status(400).send({
+            message: 'Atleast one prameter is required'
         });
-
-    } catch (error) {
-        res.status(error.statusCode).send(error);
+        return;
     }
+
+    postModel.create({
+        postText: body.postText,
+        date: new Date().toString(),
+    }, (err, post) => {
+        if (!err) {
+            res.status(201).send({
+                message: 'Post successfully added',
+                data: post
+            });
+        }
+        else {
+            res.status(500).send({ message: 'server error' });
+        }
+    })
+    // if (!post) throw new Error('server error').status(500);
+    // if (!post) throw new Error({ message: 'server error', statusCode: 500 });
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -443,23 +414,25 @@ app.get('/api/v1/posts', async (req, res) => {
 
 //////////////////// Product Delete API //////////////////////////////////
 
-app.delete('/api/v1/product/:id', (req, res) => {
+app.delete('/api/v1/post/:id', (req, res) => {
     const id = req.params.id;
 
     postModel.deleteOne({ _id: id }, (err, deletedProduct) => {
         if (!err) {
             if (deletedProduct.deletedCount != 0) {
                 res.send({
-                    message: 'product deleted successfully',
+                    message: 'post deleted successfully',
                     data: deletedProduct
                 });
-            } else {
+            }
+            else {
                 res.status(404).send({
-                    message: 'product not found of this id : ',
+                    message: 'post did not found of this id : ',
                     request_id: id
                 });
             }
-        } else {
+        }
+        else {
             res.status(500).send({
                 message: 'server error'
             });
@@ -473,28 +446,25 @@ app.delete('/api/v1/product/:id', (req, res) => {
 
 //////////////////// Product Edit API //////////////////////////////////
 
-app.put('/api/v1/product/:id', async (req, res) => {
+app.put('/api/v1/post/:id', async (req, res) => {
     const body = req.body;
     const id = req.params.id;
 
     if (
-        !body.name
-        ||
-        !body.price
-        ||
-        !body.description
+        !body.postText
+        &&
+        !body.postImage
     ) {
         res.status(400).send({
-            message: 'required paramater missing'
+            message: 'Atleast one prameter is required'
         });
         return;
     }
 
     try {
         let data = await postModel.findByIdAndUpdate(id, {
-            name: body.name,
-            price: body.price,
-            description: body.description,
+            postText: body.postText,
+            postImage: body.image,
         },
             { new: true }
         ).exec();
@@ -520,7 +490,7 @@ app.put('/api/v1/product/:id', async (req, res) => {
 
 app.get('/api/v1/products/:name', (req, res) => {
 
-    let findName = req.params.name;
+    let findName = req.params.userName;
 
     postModel.find({ name: { $regex: `${findName}` } }, (err, data) => {
         if (!err) {
@@ -540,9 +510,9 @@ app.get('/api/v1/products/:name', (req, res) => {
         } else {
             res.status(500).send({
                 message: 'server error'
-            })
+            });
         }
-    })
+    });
 });
 
 ///////////////////////////////////////////////////////////////////////////////

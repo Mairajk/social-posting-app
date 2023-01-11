@@ -12,7 +12,7 @@ import {
 } from '@mui/material'
 
 import { useState, useEffect, useContext } from 'react';
-
+import Search from './components/Search';
 
 
 
@@ -21,13 +21,11 @@ const Home = () => {
     let { state, dispatch } = useContext(GlobalContext);
 
     const [isPosting, setIsPosting] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
     const [responseMessage, setResponseMessage] = useState(null);
     const [responsePosts, setResponsePosts] = useState([]);
     const [load, setLoad] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const [editingData, setEditingData] = useState({});
-    const [searchText, setSearchText] = useState('');
-    const [searchData, setSearchData] = useState([]);
 
 
     useEffect(() => {
@@ -87,45 +85,26 @@ const Home = () => {
             console.log("values : ", values);
             console.log("Hello");
 
-            const cloudinaryData = new FormData();
-            cloudinaryData.append("file", values.image);
-            cloudinaryData.append("upload_preset", "social-app_posts-photos");
+            axios.post(`${state.baseURL}/post`, {
+                postText: values.postText,
+            }, {
+                withCredentials: true
+            })
+                .then((response) => {
+                    console.log('response : ', response.data);
+                    console.log(`data added`);
+                    setResponseMessage(response.data.message)
+                    setIsPosting(false);
+                    setTimeout(() => {
+                        setResponseMessage(null)
+                    }, 10000);
+                    setLoad(!load);
 
-            cloudinaryData.append("cloud_name", "dzy6qrpp5");
-            console.log(cloudinaryData);
-            axios.post(`https://api.cloudinary.com/v1_1/dzy6qrpp5/image/upload`,
-                cloudinaryData,
-                {
-                    headers: { 'Content-Type': 'multipart/form-data' }
+                    // console.log('responsePosts:====> ' ,responsePosts);
                 })
-
-                .then(res => {
-                    axios.post(`${state.baseURL}/post`, {
-                        postText: values.postText,
-                        image: res?.data?.url
-                    }, {
-                        withCredentials: true
-                    })
-                        .then((response) => {
-                            // console.log(`response : ${response}`);///// return [object Object]
-                            console.log('`response : `', response.data);
-                            console.log(`data added`);
-                            setResponseMessage(response.data.message)
-                            setIsPosting(false);
-                            setTimeout(() => {
-                                setResponseMessage(null)
-                            }, 10000);
-                            setLoad(!load);
-
-                            // console.log('responsePosts:====> ' ,responsePosts);
-                        })
-                        .catch((err) => {
-                            console.log(`Error : ===>`, err);
-                        })
+                .catch((err) => {
+                    console.log(`Error : ===>`, err);
                 })
-                .catch(err => {
-                    console.log(err);
-                });
         }
     });
 
@@ -167,46 +146,10 @@ const Home = () => {
         }
     });
 
-    const search = (e) => {
-        e.preventDefault();
-
-        axios.get(`${state.baseURL}/posts/${searchText}`, {
-            withCredentials: true
-        })
-            .then((res) => {
-                setSearchData([])
-                setSearchData(res.data.data);
-                e.reset();
-                console.log('searchData ====>', searchData);
-                console.log('response "all products" =========>: ', res.data);
-            })
-            .catch((err) => {
-                console.log('Error: ', err);
-            })
-
-        console.log(searchData, '<<<=================');
-    };
-
 
     return (
         <div>
             <h1>This is Home </h1>
-
-            <form action="" className='searchForm' on onSubmit={search}>
-
-                <TextField
-                    variant='outlined'
-                    type="search"
-                    placeholder='Search products'
-                    value={searchText}
-                    name=""
-                    id=""
-                    onChange={(e) => {
-                        setSearchText(e.target.value)
-                    }}
-                />
-                <Button type='submit'> Search </Button>
-            </form>
 
             <Button
                 className='postBtn'
@@ -216,13 +159,15 @@ const Home = () => {
                 Post
             </Button>
 
+            <Search />
+
             <div className="postingForm">
                 {
                     (isPosting) ?
 
                         <form className='addForm' onSubmit={postFormik.handleSubmit} >
 
-                            <label htmlFor="image" className='imgUpload'>
+                            {/* <label htmlFor="image" className='imgUpload'>
                                 <input
                                     id="image"
                                     name="image"
@@ -232,7 +177,7 @@ const Home = () => {
                                         postFormik.setFieldValue("image", e.currentTarget.files[0]);
                                     }} />
                                 <i className='imgIcon'><ImageIcon /></i>
-                            </label>
+                            </label> */}
 
                             <div className="inputDiv">
                                 <TextField
@@ -240,8 +185,8 @@ const Home = () => {
                                     type="text"
                                     label='Post'
                                     placeholder="Write your post here..."
-                                    id="description"
-                                    value={postFormik.values.description}
+                                    id="postText"
+                                    value={postFormik.values.postText}
                                     onChange={postFormik.handleChange}
                                     error={postFormik.touched.description && Boolean(postFormik.errors.description)}
                                     helperText={postFormik.touched.description && postFormik.errors.description}
@@ -258,83 +203,6 @@ const Home = () => {
                 <h3>{responseMessage}</h3>
             </div>
 
-            {
-                (searchData.length) ?
-                    <div className='mainSearch'>
-                        <h3> Search Results :</h3>
-                        <Button onClick={() => {
-                            setSearchData([]);
-                        }}>x</Button>
-
-                        <div className="searchResult">
-
-                            {searchData.map((eachPost, i) => {
-
-                                return (
-                                    <div className="eachPost" key={i}>
-
-                                        <p> {moment(eachPost.date).fromNow()}</p>
-
-                                        {
-                                            (isEditing && eachPost._id === editingData._id) ?
-
-                                                <div className="editingProduct">
-
-                                                    <form onSubmit={updateFormik.handleSubmit}>
-
-                                                        <div className="inputDiv">
-                                                            <TextField
-                                                                variant='outlined'
-                                                                type="text"
-                                                                id="Post"
-                                                                label='Description'
-                                                                value={updateFormik.values.description}
-                                                                placeholder="Write something here..."
-                                                                onChange={updateFormik.handleChange}
-                                                                error={updateFormik.touched.description && Boolean(updateFormik.errors.description)}
-                                                                helperText={updateFormik.touched.description && updateFormik.errors.description}
-                                                            />
-                                                        </div>
-
-                                                        <Button type="submit" >Save</Button>
-                                                    </form>
-
-                                                    <Button onClick={() => {
-                                                        setIsEditing(false);
-                                                    }}>Cancel</Button>
-                                                </div>
-                                                :
-                                                <div>
-                                                    <p className="productname">{eachPost.name}</p>
-                                                    <p className="productPrize">{eachPost.price}</p>
-                                                    <p className="productDescription">{eachPost.description}</p>
-
-                                                    <Button
-                                                        className="editing"
-                                                        onClick={() => {
-                                                            editPost(eachPost);
-                                                            console.log('editingData ===> ', editingData);
-                                                        }}
-                                                    >
-                                                        Edit
-                                                    </Button>
-
-                                                    <Button className="delete"
-                                                        onClick={() => {
-                                                            deletePost(eachPost._id);
-                                                        }}>
-                                                        Delete
-                                                    </Button>
-                                                </div>
-                                        }
-                                    </div>
-                                )
-                            })}
-
-                        </div>
-                    </div>
-                    : null
-            }
             <div className="products">
                 {
                     responsePosts.map((eachPost, i) => {
@@ -358,9 +226,9 @@ const Home = () => {
                                                         type="text"
                                                         label='Post'
                                                         placeholder="Write something here..."
-                                                        id="description"
+                                                        id="postText"
                                                         varient="outlined"
-                                                        value={updateFormik.values.description}
+                                                        value={updateFormik.values.postText}
                                                         onChange={updateFormik.handleChange}
                                                         error={updateFormik.touched.description && Boolean(updateFormik.errors.description)}
                                                         helperText={updateFormik.touched.description && updateFormik.errors.description}
@@ -378,9 +246,7 @@ const Home = () => {
                                         :
 
                                         <div>
-                                            <p className="productname">{eachPost.name}</p>
-                                            <p className="productPrize">{eachPost.price}</p>
-                                            <p className="productDescription">{eachPost.description}</p>
+                                            <p className="productDescription">{eachPost.postText}</p>
 
                                             <Button
                                                 className="editing"
