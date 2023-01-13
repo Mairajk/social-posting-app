@@ -308,6 +308,46 @@ app.use('/api/v1', (req, res, next) => {
 
 
 
+///////////////////////////// update-password API //////////////////////////////////////
+
+app.post('/api/v1/update-password', async (req, res) => {
+
+    try {
+        const body = req.body;
+        const currentPassword = body.currentPassword;
+        const newPassword = body.newPassword;
+        // const confirmPassword = body.confirmPassword;
+        const _id = req.body.token.id;
+
+        const user = await userModel.findOne({ _id: _id }, 'password').exec();
+
+        if (!user) throw new Error('User not found');
+
+        const isMatch = await varifyHash(currentPassword, user.password);
+        if (!isMatch) throw new Error('Invalid current password');
+
+        const hashedPassword = await stringToHash(newPassword);
+
+        await userModel.findOneAndUpdate({ _id: _id }, { password: hashedPassword }).exec();
+
+        res.status(200).send({
+            message: 'password updated successfully'
+        });
+
+    } catch (error) {
+        console.log('error ===>', error);
+
+        res.status(500).send({
+            message: 'password update failed',
+            error: error.message
+        });
+    }
+});
+
+///////////////////////////////////////////////////////////////////////////////
+
+
+
 ///////////////////////////// Profile API //////////////////////////////////////
 
 app.get('/api/v1/profile', (req, res) => {

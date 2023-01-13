@@ -1,5 +1,6 @@
 import { useState, useContext } from "react";
 import { GlobalContext } from '../../context/context';
+import { Link } from "react-router-dom";
 
 
 import { useFormik } from "formik"
@@ -117,9 +118,7 @@ const Login = () => {
                         onChange={formik.handleChange}
                         error={formik.touched.email && Boolean(formik.errors.email)}
                         helperText={formik.touched.email && formik.errors.email}
-
                     />
-
 
                     <TextField
                         margin="dense"
@@ -134,20 +133,24 @@ const Login = () => {
                         helperText={formik.touched.password && formik.errors.password}
                     />
 
+                    <Button
+                        // fullWidth
+                        color="primary"
+                        variant="contained"
+                        type="submit"
+                        margin="dense"
+                        sx={{ mt: 2 }}
+                    >
+                        Login
+                    </Button>
+
                 </Grid>
 
-                <Button
-                    // fullWidth
-                    color="primary"
-                    variant="contained"
-                    type="submit"
-                    margin="dense"
-                    sx={{ mt: 2 }}
-                >
-                    Login
-                </Button>
 
             </form>
+
+            <Link to='/forget-password' > Forget Password ...?</Link>
+
         </div>
     )
 };

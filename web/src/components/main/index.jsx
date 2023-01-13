@@ -7,8 +7,10 @@ import { Routes, Route, Link, Navigate } from "react-router-dom";
 
 
 import Home from "../home";
-import About from "../about";
+import Profile from "../profile";
 import Gallery from "../gallery";
+import ChangePassword from "../home/components/ChangePassword";
+import ForgetPassword from "../forgetPassword";
 
 
 ///================ Styling ===================================
@@ -74,8 +76,9 @@ const Main = () => {
                         <nav>
                             <ul>
                                 <li><Link to={`/`}>Home</Link></li>
-                                <li><Link to={`/about`}>About</Link></li>
+                                <li><Link to={`/profile`}>Profile</Link></li>
                                 <li><Link to={`/gallery`}>Gallery</Link></li>
+                                <li><Link to={`/change-password`}>Change Password</Link></li>
                                 <li
                                     onClick={() => {
                                         axios.post(`${state.baseURL}/logout`, {}, {
@@ -117,8 +120,9 @@ const Main = () => {
 
                     <Routes>
                         <Route path="/" element={<Home />} />
-                        <Route path="/about" element={<About />} />
+                        <Route path="/profile" element={<Profile />} />
                         <Route path="/gallery" element={<Gallery />} />
+                        <Route path="/change-password" element={<ChangePassword />} />
                         <Route path="*" element={<Navigate to={`/`} replace={true} />} />
                     </Routes>
 
@@ -128,6 +132,7 @@ const Main = () => {
 
                         <Route path="/signup" element={<Signup />} />
                         <Route path="/" element={<Login />} />
+                        <Route path="/forget-password" element={<ForgetPassword />} />
                         <Route path="*" element={<Navigate to={`/`} replace={true} />} />
 
                     </Routes>
@@ -170,11 +175,11 @@ export default Main;
     //     <TabsUnstyled defaultValue={0}>
     //         <TabsList>
     //             <Tab>Home</Tab>
-    //             <Tab>About</Tab>
+    //             <Tab>Profile</Tab>
     //             <Tab>Gallery</Tab>
     //         </TabsList>
     //         <TabPanel value={0}><Home /></TabPanel>
-    //         <TabPanel value={1}><About /></TabPanel>
+    //         <TabPanel value={1}><Profile /></TabPanel>
     //         <TabPanel value={2}><Gallery /></TabPanel>
     //     </TabsUnstyled>
 
