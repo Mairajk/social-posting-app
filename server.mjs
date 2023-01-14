@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema({
 
 const userModel = mongoose.model('Users', userSchema);
 
-/////////////////////////// Product model and Schema //////////////////////////////////
+/////////////////////////// post model and Schema //////////////////////////////////
 
 
 let postSchema = new mongoose.Schema({
@@ -60,6 +60,23 @@ let postSchema = new mongoose.Schema({
 });
 
 const postModel = mongoose.model('posts', postSchema);
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+
+
+/////////////////////////// OTP model and Schema //////////////////////////////////
+
+
+let otpSchema = new mongoose.Schema({
+    email: { type: String, required: true },
+    otp: { type: String, required: true },
+    isUsed: { type: Boolean, default: false },
+    createdOn: { type: Date, default: Date.now },
+});
+
+const otpModel = mongoose.model('OTPs', otpSchema);
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -282,6 +299,25 @@ app.post('/api/v1/forget-password/find-account', async (req, res) => {
             return;
         };
 
+        const user = await userModel.findOne(
+            { email: email },
+            'firstName lastName email')
+            .exec();
+
+        if (!user) throw new Error('incorrect email ! user not found');
+
+
+        const nanoid = customAlphabet('1234567890', 5)
+        const OTP = nanoid();
+        const otpHash = await stringToHash(OTP)
+
+        console.log("OTP: ", OTP);
+        console.log("otpHash: ", otpHash);
+
+        otpModel.create({
+            otp: otpHash,
+            email: body.email, // malik@sysborg.com
+        });
 
 
 
@@ -424,7 +460,7 @@ app.get('/api/v1/profile', (req, res) => {
     });
 });
 
-//////////////////// Product adding API //////////////////////////////////
+//////////////////// post adding API //////////////////////////////////
 
 app.post('/api/v1/post', (req, res) => {
     const body = req.body;
@@ -483,7 +519,7 @@ app.get('/api/v1/posts', async (req, res) => {
 ///////////////////////////////////////////////////////////////////////////////
 
 
-//////////////////// Product Delete API //////////////////////////////////
+//////////////////// post Delete API //////////////////////////////////
 
 app.delete('/api/v1/post/:id', (req, res) => {
     const id = req.params.id;
@@ -515,7 +551,7 @@ app.delete('/api/v1/post/:id', (req, res) => {
 
 
 
-//////////////////// Product Edit API //////////////////////////////////
+//////////////////// post Edit API //////////////////////////////////
 
 app.put('/api/v1/post/:id', async (req, res) => {
     const body = req.body;
@@ -557,7 +593,7 @@ app.put('/api/v1/post/:id', async (req, res) => {
 
 
 
-//////////////////// Product Search API //////////////////////////////////
+//////////////////// post Search API //////////////////////////////////
 
 app.get('/api/v1/products/:name', (req, res) => {
 
