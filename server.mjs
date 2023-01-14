@@ -262,6 +262,37 @@ app.post('/api/v1/logout', (req, res) => {
 ///////////////////////////////////////////////////////////////////
 
 
+
+
+
+
+//////////////////  find user for forget password API ////////////////////////////////////
+
+app.post('/api/v1/forget-password/find-account', async (req, res) => {
+
+    try {
+
+        const body = req.body;
+        const email = body.email;
+
+        if (!email) {
+            res.status(400).send({
+                message: 'email is required',
+            });
+            return;
+        };
+
+
+
+
+    } catch (err) {
+        console.log('err ===>', err);
+        res.status(500).send(err);
+    }
+});
+///////////////////////////////////////////////////////////////////
+
+
 ///////////////////////////*******************////////////////////////////////////////
 
 app.use('/api/v1', (req, res, next) => {

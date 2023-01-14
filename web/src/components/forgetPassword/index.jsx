@@ -11,6 +11,7 @@ const ForgetPassword = () => {
     const [isUserFound, setIsUserFound] = useState(false)
     const [message, setMessage] = useState(false)
 
+    //=========================== find user for forget password (formik)   ==============================//   
 
     const formik = useFormik({
         initialValues: {
@@ -30,7 +31,8 @@ const ForgetPassword = () => {
 
             }),
 
-        onSubmit: (values) => {
+        onSubmit: (values, e) => {
+            // e.resetForm();
             console.log("values : ", values);
 
             axios.post(`${state.baseURL}/forget-password/find-account`, {
@@ -48,6 +50,52 @@ const ForgetPassword = () => {
                 });
         }
     });
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    //======================================== OTP send (formik)   ==========================================//   
+
+    const OTPformik = useFormik({
+        initialValues: {
+            OTP: "",
+            newPassword: "",
+        },
+
+        validationSchema:
+
+            yup.object({
+
+                OTP: yup
+                    .string('5 digit OTP is required')
+                    .required('5 digit OTP is required'),
+
+                newPassword: yup
+                    .string('New password is required')
+                    .required('New password is required')
+
+            }),
+
+        onSubmit: (values, e) => {
+            e.resetForm();
+            console.log("values : ", values);
+
+            axios.post(`${state.baseURL}/forget-password/send-email`, {
+                OTP: values.OTP,
+                newPassword: values.newPassword
+            }, {
+                withCredentials: true
+            })
+                .then((res) => {
+                    console.log('response ===>', res);
+                })
+                .catch((err) => {
+                    console.log('error ===>', err);
+                    setMessage(err?.response?.data?.message);
+                });
+        }
+    });
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     return (
         <div>
@@ -56,7 +104,7 @@ const ForgetPassword = () => {
             {
                 (!isUserFound) ?
 
-                    <form action="" onSubmit={formik.submitHandler}>
+                    <form action="" onSubmit={formik.handleSubmit}>
 
                         <Grid
                             container
@@ -94,7 +142,7 @@ const ForgetPassword = () => {
 
                     :
 
-                    <form action="">
+                    <form action="" onSubmit={OTPformik.handleSubmit}>
                         <Grid
                             container
                             direction="column"
@@ -108,11 +156,11 @@ const ForgetPassword = () => {
                                 type="OTP"
                                 placeholder="Enter your 5 digit OTP"
                                 id="OTP"
-                                value={formik.values.OTP}
+                                value={OTPformik.values.OTP}
                                 label='OTP'
-                                onChange={formik.handleChange}
-                                error={formik.touched.OTP && Boolean(formik.errors.OTP)}
-                                helperText={formik.touched.OTP && formik.errors.OTP}
+                                onChange={OTPformik.handleChange}
+                                error={OTPformik.touched.OTP && Boolean(OTPformik.errors.OTP)}
+                                helperText={OTPformik.touched.OTP && OTPformik.errors.OTP}
                             />
 
                             <TextField
@@ -121,11 +169,11 @@ const ForgetPassword = () => {
                                 type="newPassword"
                                 placeholder="Enter your new password"
                                 id="newPassword"
-                                value={formik.values.newPassword}
+                                value={OTPformik.values.newPassword}
                                 label='New Password'
-                                onChange={formik.handleChange}
-                                error={formik.touched.newPassword && Boolean(formik.errors.newPassword)}
-                                helperText={formik.touched.newPassword && formik.errors.newPassword}
+                                onChange={OTPformik.handleChange}
+                                error={OTPformik.touched.newPassword && Boolean(OTPformik.errors.newPassword)}
+                                helperText={OTPformik.touched.newPassword && OTPformik.errors.newPassword}
                             />
 
                             <Button
@@ -146,4 +194,4 @@ const ForgetPassword = () => {
     )
 }
 
-export default ForgetPassword
+export default ForgetPassword;
