@@ -13,6 +13,7 @@ import {
     varifyHash,
 } from "bcrypt-inzi";
 import mongoose from "mongoose";
+import multer from "multer";
 // import { type } from "os";
 // import { fileURLToPath } from "url";
 
@@ -460,9 +461,32 @@ app.get('/api/v1/profile', (req, res) => {
     });
 });
 
+
+///////////////////////////////////////////////////////////////////////////////
+
+
+
 //////////////////// post adding API //////////////////////////////////
 
-app.post('/api/v1/post', (req, res) => {
+//////////////////============= Multer ==================////////////////
+
+const storageConfig = multer.diskStorage({
+
+    destination: './post-photos-uploads/',
+
+    filename: (req, file, cb) => {
+
+        console.log("mul-file: ", file);
+        cb(null, `${new Date().getTime()}-${file.originalname}`);
+    }
+});
+
+const uploadMiddleware = multer({ storage: storageConfig });
+
+///////////////////////////////////////////////////////////////////////////
+
+app.post('/api/v1/post', uploadMiddleware.any(), (req, res) => {
+
     const body = req.body;
 
     if (
@@ -490,9 +514,9 @@ app.post('/api/v1/post', (req, res) => {
             res.status(500).send({ message: 'server error' });
         }
     })
-    // if (!post) throw new Error('server error').status(500);
-    // if (!post) throw new Error({ message: 'server error', statusCode: 500 });
 });
+// if (!post) throw new Error('server error').status(500);
+// if (!post) throw new Error({ message: 'server error', statusCode: 500 });
 
 ///////////////////////////////////////////////////////////////////////////////
 

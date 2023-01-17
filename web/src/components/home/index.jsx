@@ -78,33 +78,38 @@ const Home = () => {
 
             yup.object({
                 postText: yup
-                    .string("Please enter your description")
+                    .string("Please enter your "),
+
             }),
 
         onSubmit: (values) => {
             console.log("values : ", values);
             console.log("Hello");
 
-            axios.post(`${state.baseURL}/post`, {
-                postText: values.postText,
-            }, {
-                withCredentials: true
-            })
-                .then((response) => {
-                    console.log('response : ', response.data);
-                    console.log(`data added`);
-                    setResponseMessage(response.data.message)
-                    setIsPosting(false);
-                    setTimeout(() => {
-                        setResponseMessage(null)
-                    }, 10000);
-                    setLoad(!load);
+            let fileInput = document.querySelector('#image');
 
-                    // console.log('responsePosts:====> ' ,responsePosts);
-                })
-                .catch((err) => {
-                    console.log(`Error : ===>`, err);
-                })
+            console.log('file ===>', fileInput);
+
+            // axios.post(`${state.baseURL}/post`, {
+            //     postText: values.postText,
+            // }, {
+            //     withCredentials: true
+            // })
+            //     .then((response) => {
+            //         console.log('response : ', response.data);
+            //         console.log(`data added`);
+            //         setResponseMessage(response.data.message)
+            //         setIsPosting(false);
+            //         setTimeout(() => {
+            //             setResponseMessage(null)
+            //         }, 10000);
+            //         setLoad(!load);
+
+            //         // console.log('responsePosts:====> ' ,responsePosts);
+            //     })
+            //     .catch((err) => {
+            //         console.log(`Error : ===>`, err);
+            //     })
         }
     });
 
@@ -167,7 +172,7 @@ const Home = () => {
 
                         <form className='addForm' onSubmit={postFormik.handleSubmit} >
 
-                            {/* <label htmlFor="image" className='imgUpload'>
+                            <label htmlFor="image" className='imgUpload'>
                                 <input
                                     id="image"
                                     name="image"
@@ -175,9 +180,10 @@ const Home = () => {
                                     className='fileInput'
                                     onChange={(e) => {
                                         postFormik.setFieldValue("image", e.currentTarget.files[0]);
-                                    }} />
+                                    }}
+                                />
                                 <i className='imgIcon'><ImageIcon /></i>
-                            </label> */}
+                            </label>
 
                             <div className="inputDiv">
                                 <TextField
@@ -198,7 +204,6 @@ const Home = () => {
                         </form>
 
                         : null
-
                 }
                 <h3>{responseMessage}</h3>
             </div>
