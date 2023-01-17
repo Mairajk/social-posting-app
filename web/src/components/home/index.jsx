@@ -84,32 +84,34 @@ const Home = () => {
 
         onSubmit: (values) => {
             console.log("values : ", values);
-            console.log("Hello");
 
-            let fileInput = document.querySelector('#image');
+            let formData = new FormData();
 
-            console.log('file ===>', fileInput);
+            formData.append('postText', values.postText);
+            formData.append('image', values.image);
 
-            // axios.post(`${state.baseURL}/post`, {
-            //     postText: values.postText,
-            // }, {
-            //     withCredentials: true
-            // })
-            //     .then((response) => {
-            //         console.log('response : ', response.data);
-            //         console.log(`data added`);
-            //         setResponseMessage(response.data.message)
-            //         setIsPosting(false);
-            //         setTimeout(() => {
-            //             setResponseMessage(null)
-            //         }, 10000);
-            //         setLoad(!load);
+            axios({
+                method: 'post',
+                url: `${state.baseURL}/post`,
+                data: formData,
+                headers: { 'Content-Type': 'multipart/form-data' },
+                withCredentials: true,
+            })
+                .then((response) => {
+                    console.log('response : ', response.data);
+                    console.log(`data added`);
+                    setResponseMessage(response.data.message)
+                    setIsPosting(false);
+                    setTimeout(() => {
+                        setResponseMessage(null)
+                    }, 10000);
+                    setLoad(!load);
 
-            //         // console.log('responsePosts:====> ' ,responsePosts);
-            //     })
-            //     .catch((err) => {
-            //         console.log(`Error : ===>`, err);
-            //     })
+                    // console.log('responsePosts:====> ' ,responsePosts);
+                })
+                .catch((err) => {
+                    console.log(`Error : ===>`, err);
+                })
         }
     });
 

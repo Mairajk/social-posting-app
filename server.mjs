@@ -14,6 +14,8 @@ import {
 } from "bcrypt-inzi";
 import mongoose from "mongoose";
 import multer from "multer";
+import bucket from "./firebase/index.mjs";
+import fs from 'fs';
 // import { type } from "os";
 // import { fileURLToPath } from "url";
 
@@ -54,9 +56,9 @@ const userModel = mongoose.model('Users', userSchema);
 
 
 let postSchema = new mongoose.Schema({
-    // userName: { type: String, required: true },
+    userId: { type: String, required: true },
     postText: { type: String },
-    // postImage: { type: String },
+    postImage: { type: String },
     date: { type: Date, default: Date.now }
 });
 
@@ -499,21 +501,51 @@ app.post('/api/v1/post', uploadMiddleware.any(), (req, res) => {
         });
         return;
     }
+    bucket.upload(
+        req.files[0].path,
+        {
+            destination: `postImages/${req.files[0].filename}`,
+        },
+        (err, file, apiResponse) => {
+            if (!err) {
 
-    postModel.create({
-        postText: body.postText,
-        date: new Date().toString(),
-    }, (err, post) => {
-        if (!err) {
-            res.status(201).send({
-                message: 'Post successfully added',
-                data: post
-            });
+                file.getSignedUrl({
+                    action: 'read',
+                    expires: '03-09-2999'
+                }).then((urlData, err) => {
+                    if (!err) {
+                        console.log("public downloadable url: ", urlData[0])
+
+                        try {
+                            fs.unlinkSync(req.files[0].path)
+                        }
+                        catch (err) {
+                            console.error(err)
+                        }
+
+                        ///////////////////////
+                        postModel.create({
+                            postText: body.postText,
+                            postImage: urlData[0],
+                            // userId: req.coookies.Token.id,
+                            date: new Date().toString(),
+                        }, (err, post) => {
+                            if (!err) {
+                                res.status(201).send({
+                                    message: 'Post successfully added',
+                                    data: post
+                                });
+                            }
+                            else {
+                                res.status(500).send({ message: 'server error' });
+                            }
+                        })
+                        /////////////////////////
+                    }
+                })
+            }
         }
-        else {
-            res.status(500).send({ message: 'server error' });
-        }
-    })
+    )
 });
 // if (!post) throw new Error('server error').status(500);
 // if (!post) throw new Error({ message: 'server error', statusCode: 500 });
