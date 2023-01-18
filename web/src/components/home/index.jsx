@@ -88,7 +88,7 @@ const Home = () => {
             let formData = new FormData();
 
             formData.append('postText', values.postText);
-            formData.append('image', values.image);
+            formData.append('PostImage', values.image);
 
             axios({
                 method: 'post',
@@ -220,7 +220,7 @@ const Home = () => {
 
                                 <p> {moment(eachPost.date).fromNow()}</p>
 
-                                <img src={eachPost.image} alt="" />
+                                <img src={eachPost.postImage} alt="" />
 
                                 {
                                     (isEditing && eachPost._id === editingData._id) ?
@@ -248,6 +248,7 @@ const Home = () => {
                                             <Button onClick={() => {
                                                 setIsEditing(false);
                                             }}>Cancel</Button>
+
                                         </div>
 
                                         :

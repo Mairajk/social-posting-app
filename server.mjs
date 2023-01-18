@@ -56,7 +56,7 @@ const userModel = mongoose.model('Users', userSchema);
 
 
 let postSchema = new mongoose.Schema({
-    userId: { type: String, required: true },
+    userId: { type: String },
     postText: { type: String },
     postImage: { type: String },
     date: { type: Date, default: Date.now }
@@ -141,16 +141,10 @@ app.post('/api/v1/signup', (req, res) => {
                             if (!err) {
                                 console.log('user created ==> ', user);
 
-                                (user.email === ADMIN) ?
-                                    res.status(201).send({
-                                        message: 'user created successfully',
-                                        isAdmin: true
-                                    })
-                                    :
-                                    res.status(201).send({
-                                        message: 'user created successfully',
-                                        isAdmin: false
-                                    });
+                                res.status(201).send({
+                                    message: 'user created successfully',
+                                    data: user
+                                });
                             } else {
                                 console.log("server error: ", err);
                                 res.status(500).send({
@@ -226,7 +220,6 @@ app.post('/api/v1/login', (req, res) => {
 
                                 res.send({
                                     message: 'logedin successfully',
-                                    isAdmin: true,
                                     userProfile: {
                                         firstName: user.firstName,
                                         lastName: user.lastName,
@@ -522,12 +515,13 @@ app.post('/api/v1/post', uploadMiddleware.any(), (req, res) => {
                         catch (err) {
                             console.error(err)
                         }
+                        console.log('deleted======================================>');
 
                         ///////////////////////
                         postModel.create({
                             postText: body.postText,
                             postImage: urlData[0],
-                            // userId: req.coookies.Token.id,
+                            userId: req?.cookies?.Token.id,
                             date: new Date().toString(),
                         }, (err, post) => {
                             if (!err) {

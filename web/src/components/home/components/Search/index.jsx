@@ -93,7 +93,7 @@ const Search = () => {
             .then((res) => {
                 setSearchData([])
                 setSearchData(res.data.data);
-                e.reset();
+                // e.reset();
                 console.log('searchData ====>', searchData);
                 console.log('response "all products" =========>: ', res.data);
             })
