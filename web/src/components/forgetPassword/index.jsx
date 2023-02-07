@@ -4,6 +4,7 @@ import { TextField, Button, Grid } from "@mui/material";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import axios from "axios";
+import { useNavigate, redirect } from "react-router-dom";
 
 const ForgetPassword = () => {
   let { state, dispatch } = useContext(GlobalContext);
@@ -11,6 +12,7 @@ const ForgetPassword = () => {
   const [message, setMessage] = useState(false);
   const [user, setUser] = useState("");
 
+  const navigate = useNavigate();
   //=========================== find user for forget password (formik)   ==============================//
 
   const formik = useFormik({
@@ -91,6 +93,19 @@ const ForgetPassword = () => {
         )
         .then((res) => {
           console.log("response ===>", res);
+
+          dispatch({
+            type: "USER_LOGIN",
+            payload: null,
+          });
+
+          dispatch({
+            type: "SET_USER",
+            payload: res.data.data,
+          });
+
+          navigate("/");
+          console.log("redirect");
         })
         .catch((err) => {
           console.log("error ===>", err);
@@ -184,6 +199,10 @@ const ForgetPassword = () => {
 
               <Button
                 // fullWidth
+                // onClick={() => {
+                //   redirect("/");
+                //   console.log("redirect");
+                // }}
                 color="primary"
                 variant="contained"
                 type="submit"

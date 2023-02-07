@@ -288,8 +288,8 @@ app.post("/api/v1/forget-password/send-otp", async (req, res) => {
       host: 'smtp.ethereal.email',
       port: 587,
       auth: {
-        user: 'adonis61@ethereal.email',
-        pass: 'um7h3FwwWsDe29zb1N'
+        user: 'prince.gutmann@ethereal.email',
+        pass: 'cQCsEqeUJRbg9Ev6dm'
       }
     });
 
@@ -348,36 +348,57 @@ app.post("/api/v1/forget-password/verify-otp", async (req, res) => {
     }
     const otpData = await otpModel.findOne({ email: email }).sort({ _id: -1 }).exec()
 
-    if (!otpData || otpData.isUsed) throw new Error('Invalid OTP');
+    if (!otpData || otpData.isUsed) throw new Error({ message: 'Invalid OTP' });
 
-    // await otpData.update({ isUsed: true }).exec();
+    await otpData.update({ isUsed: true }).exec();
 
     const OTP_createdOn = moment(otpData.createdOn);
     const OTP_timeSpan = moment().diff(OTP_createdOn, 'minutes');
 
-    if (OTP_timeSpan >= 5) throw new Error('Invalid OTP');
+    if (OTP_timeSpan >= 5) throw new Error({ message: 'Invalid OTP' });
 
     const isMatched = await varifyHash(OTP, otpData.otp);
 
-    if (!isMatched) throw new Error('Invalid OTP');
+    if (!isMatched) throw new Error({ message: 'Invalid OTP' });
 
 
     const newPasswordHash = await stringToHash(newPassword);
 
-    await userModel.updateOne(
+    await userModel.findOneAndUpdate(
       { email: email },
-      { password: newPasswordHash }
+      { password: newPasswordHash },
+      { new: true }
     ).exec();
+    const user = await userModel.findOne({ email }).exec()
+    console.log(user, '==============>');
 
+    const token = jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+        iat: Math.floor(Date.now() / 1000) - 30,
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
+      },
+      SECRET
+    );
+
+    console.log("token ===> ", token);
+
+    res.cookie("Token", token, {
+      maxAge: 86_400_000,
+      httpOnly: true,
+    });
     res.send({
       message: ' OTP send successfully ',
+      data: user
     })
     //===========================================================================
-  } catch (err) {
-    console.log("err ===>", err);
-    res.status(500).send(err);
+  } catch (error) {
+    console.log("err ===>", error);
+    res.status(500).send(error);
   }
 });
+//   TODO: =======>  Test this API again   (05-02-2023)
 
 ///////////////////////////////////////////////////////////////////
 
