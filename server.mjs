@@ -398,7 +398,7 @@ app.post("/api/v1/forget-password/verify-otp", async (req, res) => {
     res.status(500).send(error);
   }
 });
-//   TODO: =======>  Test this API again   (05-02-2023)
+//   TODO: =======>  optimize code OR add socket-io   (08-02-2023)
 
 ///////////////////////////////////////////////////////////////////
 
