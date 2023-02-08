@@ -7,7 +7,6 @@ import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 import { stringToHash, varifyHash } from "bcrypt-inzi";
 import { customAlphabet } from 'nanoid'
-import mongoose from "mongoose";
 import multer from "multer";
 import fs from "fs";
 import nodemailer from 'nodemailer';
@@ -15,8 +14,15 @@ import moment from 'moment';
 // import { type } from "os";
 // import { fileURLToPath } from "url";
 
-//---------------------------------------
+//-----------------------------------------------------
+
 import bucket from "./firebase/index.mjs";
+import { userModel, postModel, otpModel } from "./model.mjs";
+
+//----------------Controllers----------------------------------------
+
+import { signupController } from "./controllers/signupController.mjs";
+//--------------------------------------------------------
 
 const SECRET = process.env.SECRET || "secuirity";
 
@@ -24,9 +30,6 @@ const app = express();
 
 const port = process.env.PORT || 5001;
 
-const mongodbURI =
-  process.env.mongodbURI ||
-  "mongodb+srv://MairajK:workhardin@cluster0.sihvwcq.mongodb.net/social-app?retryWrites=true&w=majority";
 
 // app.use(cors());
 app.use(express.json());
@@ -38,53 +41,16 @@ app.use(
   })
 );
 
-///////////////////////////////// USER schema and model ////////////////////////
 
-const userSchema = new mongoose.Schema({
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
-  email: { type: String, required: true },
-  password: { type: String, required: true },
-  age: { type: String },
-  profilePhoto: { type: String },
-  contact: { type: String },
-});
-
-const userModel = mongoose.model("Users", userSchema);
-
-/////////////////////////// post model and Schema //////////////////////////////////
-
-let postSchema = new mongoose.Schema({
-  userId: { type: String },
-  postText: { type: String },
-  postImage: { type: String },
-  date: { type: Date, default: Date.now },
-});
-
-const postModel = mongoose.model("posts", postSchema);
-
-//////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////// OTP model and Schema //////////////////////////////////
-
-let otpSchema = new mongoose.Schema({
-  email: { type: String, required: true },
-  otp: { type: String, required: true },
-  isUsed: { type: Boolean, default: false },
-  createdOn: { type: Date, default: Date.now },
-});
-
-const otpModel = mongoose.model("OTPs", otpSchema);
-
-//////////////////////////////////////////////////////////////////////////////
+//   TODO: =======>  optimize signup API & (optimize code OR add socket-io )  (08-02-2023)
 
 //////////////////  SIGNUP API ////////////////////////////////////
 
-app.post("/api/v1/signup", (req, res) => {
-  let body = req.body;
+app.post("/api/v1/signup", async (request, response) => {
+  let body = request.body;
 
   if (!body.firstName || !body.lastName || !body.email || !body.password) {
-    res.status(400).send({
+    response.status(400).send({
       message: `required fields missing, example request : 
             {
                 firstName : 'Mairaj',
@@ -95,57 +61,9 @@ app.post("/api/v1/signup", (req, res) => {
     });
     return;
   }
-
-  req.body.email = req.body.email.toLowerCase();
-
-  userModel.findOne({ email: body.email }, (err, user) => {
-    if (!err) {
-      console.log("user ===> ", user);
-
-      if (user) {
-        console.log("user exist already ===>", user);
-
-        res.status(400).send({
-          message: "this email is already exist please try a different one.",
-        });
-        return;
-      } else {
-        stringToHash(body.password).then((hashedPassword) => {
-          userModel.create(
-            {
-              firstName: body.firstName,
-              lastName: body.lastName,
-              email: body.email,
-              password: hashedPassword,
-            },
-            (err, user) => {
-              if (!err) {
-                console.log("user created ==> ", user);
-
-                res.status(201).send({
-                  message: "user created successfully",
-                  data: user,
-                });
-              } else {
-                console.log("server error: ", err);
-                res.status(500).send({
-                  message: "server error",
-                  error: err,
-                });
-              }
-            }
-          );
-        });
-      }
-    } else {
-      console.log("error ===> ", err);
-      res.status(500).send({
-        message: "server error",
-        error: err,
-      });
-      return;
-    }
-  });
+  console.log('=======================>');
+  signupController(request, response);
+  console.log('second =================>');
 });
 //////////////////////////////////////////////////////////////////
 
@@ -398,7 +316,6 @@ app.post("/api/v1/forget-password/verify-otp", async (req, res) => {
     res.status(500).send(error);
   }
 });
-//   TODO: =======>  optimize code OR add socket-io   (08-02-2023)
 
 ///////////////////////////////////////////////////////////////////
 
@@ -724,33 +641,3 @@ app.use("*", express.static(path.join(__dirname, "./web/build/index.html")));
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
-
-mongoose.connect(mongodbURI);
-
-////////////////mongodb connected disconnected events///////////////////////////////////////////////
-mongoose.connection.on("connected", function () {
-  //connected
-  console.log("Mongoose is connected");
-});
-
-mongoose.connection.on("disconnected", function () {
-  //disconnected
-  console.log("Mongoose is disconnected");
-  process.exit(1);
-});
-
-mongoose.connection.on("error", function (err) {
-  //any error
-  console.log("Mongoose connection error: ", err);
-  process.exit(1);
-});
-
-process.on("SIGINT", function () {
-  /////this function will run jst before app is closing
-  console.log("app is terminating");
-  mongoose.connection.close(function () {
-    console.log("Mongoose default connection closed");
-    process.exit(0);
-  });
-});
-////////////////mongodb connected disconnected events///////////////////////////////////////////////
